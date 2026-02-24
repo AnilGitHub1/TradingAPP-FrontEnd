@@ -51,7 +51,7 @@ const TradeBox = () => {
           </span>
           <span>
             <i
-              class="fa-solid fa-xmark"
+              className="fa-solid fa-xmark"
               onClick={() => handleOnClickDeleteTradeBox()}
             ></i>
           </span>

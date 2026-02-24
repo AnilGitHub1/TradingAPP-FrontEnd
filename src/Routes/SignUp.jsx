@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import ButtonDark from "../Components/Common/ButtonDark";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../Contexts/AuthContext";
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -55,43 +55,43 @@ const SignUp = () => {
 
   return (
     <>
-      <div class="login">
-        <div class="loginSection">
-          <div class="loginContainer">
-            <div class="loginImgContainer">
-              <img loading="lazy" src="./Images/9.jpg" class="loginImg" />
+      <div className="login">
+        <div className="loginSection">
+          <div className="loginContainer">
+            <div className="loginImgContainer">
+              <img loading="lazy" src="./Images/9.jpg" className="loginImg" />
             </div>
-            <div class="loginFormContainer">
-              <div class="loginForm">
-                <div class="div-6">Join Us</div>
-                <div class="loginFormHeading">SIGN UP</div>
-                <div class="loginFormSubHeadding">
+            <div className="loginFormContainer">
+              <div className="loginForm">
+                <div className="div-6">Join Us</div>
+                <div className="loginFormHeading">SIGN UP</div>
+                <div className="loginFormSubHeadding">
                   Sign up to access your account
                 </div>
-                <div class="loginFormText">Name</div>
+                <div className="loginFormText">Name</div>
                 <input
-                  class="loginFormInput"
+                  className="loginFormInput"
                   placeholder="Name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 ></input>
-                <div class="loginFormText">Email</div>
+                <div className="loginFormText">Email</div>
                 <input
-                  class="loginFormInput"
+                  className="loginFormInput"
                   placeholder="yourmail@gmail.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 ></input>
-                <div class="loginFormText">Password</div>
+                <div className="loginFormText">Password</div>
                 <input
-                  class="loginFormInput"
+                  className="loginFormInput"
                   placeholder="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 ></input>
-                <div class="loginFormText">Confirm Password</div>
+                <div className="loginFormText">Confirm Password</div>
                 <input
-                  class="loginFormInput"
+                  className="loginFormInput"
                   placeholder="confirm password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}

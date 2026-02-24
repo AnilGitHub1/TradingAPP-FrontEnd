@@ -1,4 +1,6 @@
 import { BrowserRouter as Router } from "react-router-dom";
+import "./bootstrap-lite.css";
+import "./App.css";
 
 import AuthProvider from "./Contexts/AuthContext.jsx";
 import StockProvider from "./Contexts/StockContext";

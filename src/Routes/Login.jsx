@@ -41,35 +41,35 @@ export default function Login(props) {
 
   return (
     <>
-      <div class="login">
-        <div class="loginSection">
-          <div class="loginContainer">
-            <div class="loginImgContainer">
-              <img loading="lazy" src="./Images/8.jpg" class="loginImg" />
+      <div className="login">
+        <div className="loginSection">
+          <div className="loginContainer">
+            <div className="loginImgContainer">
+              <img loading="lazy" src="./Images/8.jpg" className="loginImg" />
             </div>
-            <div class="loginFormContainer">
-              <div class="loginForm">
-                <div class="loginFormHeading">LOG IN</div>
-                <div class="loginFormSubHeadding">
+            <div className="loginFormContainer">
+              <div className="loginForm">
+                <div className="loginFormHeading">LOG IN</div>
+                <div className="loginFormSubHeadding">
                   Sign in to access your account
                 </div>
-                <div class="loginFormText">Name</div>
+                <div className="loginFormText">Name</div>
                 <input
-                  class="loginFormInput"
+                  className="loginFormInput"
                   placeholder="Name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 ></input>
-                <div class="loginFormText">Email</div>
+                <div className="loginFormText">Email</div>
                 <input
-                  class="loginFormInput"
+                  className="loginFormInput"
                   placeholder="yourmail@gmail.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 ></input>
-                <div class="loginFormText">Password</div>
+                <div className="loginFormText">Password</div>
                 <input
-                  class="loginFormInput"
+                  className="loginFormInput"
                   placeholder="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
