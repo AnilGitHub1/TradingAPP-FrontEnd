@@ -108,7 +108,7 @@ export default function TradesTable() {
                   {trade.status === "TODO" && (
                     <td>
                       <button onClick={() => handleDelete(trade.id)}>
-                        <i class="fa-solid fa-trash-can"></i>
+                        <i className="fa-solid fa-trash-can"></i>
                       </button>
                     </td>
                   )}

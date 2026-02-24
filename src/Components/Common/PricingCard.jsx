@@ -4,21 +4,21 @@ import ButtonDark from "./ButtonDark";
 const PricingCard = (props) => {
   console.log(props.plan.Items);
   return (
-    <div class="pricingPlanCard">
-      <div class="pricingPlanContainer">
-        <div class="pricingPlanHeading">{props.plan.Heading}</div>
-        <div class="pricingPlanCost">{props.plan.Cost}</div>
-        <div class="pricingPlanLine"></div>
-        <div class="pricingPlanSubHeadding">Includes:</div>
+    <div className="pricingPlanCard">
+      <div className="pricingPlanContainer">
+        <div className="pricingPlanHeading">{props.plan.Heading}</div>
+        <div className="pricingPlanCost">{props.plan.Cost}</div>
+        <div className="pricingPlanLine"></div>
+        <div className="pricingPlanSubHeadding">Includes:</div>
         {props.plan.Items.map((element) => {
           return (
-            <div class="pricingPlanItem">
+            <div className="pricingPlanItem">
               <img
                 loading="lazy"
                 src="https://cdn.builder.io/api/v1/image/assets/TEMP/3312b4e0-1bcc-4a7f-adb7-560bc5c2383b?apiKey=05a03f3237de41d99e4f93550adfb278&"
-                class="pricingPlanItemImg"
+                className="pricingPlanItemImg"
               />
-              <div class="priicngPlanItemText">{element}</div>
+              <div className="priicngPlanItemText">{element}</div>
             </div>
           );
         })}
