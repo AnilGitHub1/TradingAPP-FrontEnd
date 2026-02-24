@@ -12,32 +12,31 @@ export default function StockBar() {
   };
 
   const handleOnClickTrade = () => {
-    //show trade box
     setTradeBoxActive(true);
   };
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-white bg-white">
-      <div className="container-fluid">
-        <div className="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-            <li className="nav-item px-3">
-              <p className="p-1" onClick={() => handleOnClickName()}>
-                {stocksDict[stockToken]}
-              </p>
-            </li>
-            <TimeFrames />
-          </ul>
-          <div className="float-end p-1 text-white">
-            <span
-              className="text-white bg-primary rounded p-1"
-              onClick={() => handleOnClickTrade()}
-            >
-              Add Trade
-            </span>
-          </div>
-        </div>
+    <div className="stock-toolbar">
+      <div className="stock-toolbar__left">
+        <button
+          type="button"
+          className="stock-symbol-button"
+          onClick={handleOnClickName}
+        >
+          <span className="stock-symbol-button__label">Search / Change Symbol</span>
+          <span className="stock-symbol-button__value">{stocksDict[stockToken]}</span>
+        </button>
+
+        <TimeFrames />
       </div>
-    </nav>
+
+      <button
+        type="button"
+        className="btn btn-primary stock-toolbar__trade-btn"
+        onClick={handleOnClickTrade}
+      >
+        Add Trade
+      </button>
+    </div>
   );
 }

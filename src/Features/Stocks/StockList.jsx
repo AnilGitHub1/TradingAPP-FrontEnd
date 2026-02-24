@@ -12,12 +12,12 @@ export default function StockList() {
     stockListCategory,
     stockListSort,
   } = useStock();
-  const [divHeight, setDivHeight] = useState(window.innerHeight - 200);
+  const [divHeight, setDivHeight] = useState(window.innerHeight - 220);
 
   const [stockList, setStockList] = useState([]);
   useEffect(() => {
     const handleResize = () => {
-      setDivHeight(window.innerHeight - 100);
+      setDivHeight(window.innerHeight - 220);
     };
 
     window.addEventListener("resize", handleResize);
@@ -32,16 +32,8 @@ export default function StockList() {
     overflow: "auto",
   };
 
-  const handleStockClick = (event) => {
-    if (event.target.hasAttribute("data-stocktoken")) {
-      setStockToken(event.target.getAttribute("data-stocktoken"));
-      return;
-    }
-    setStockToken(
-      event.target
-        .querySelector("span[data-stocktoken]")
-        .getAttribute("data-stocktoken"),
-    );
+  const handleStockClick = (token) => {
+    setStockToken(token);
   };
 
   const fetchStockList = async () => {
@@ -62,35 +54,24 @@ export default function StockList() {
   }, [timeFrame, stockListCategory, stockListSort]);
 
   return (
-    <div>
+    <div className="stocklist-shell">
       <StockListFilter />
 
-      <div
-        className="col stocklist"
-        style={divStyle}
-        onClick={(event) => {
-          handleStockClick(event);
-        }}
-      >
+      <div className="stocklist" style={divStyle}>
         {stockList &&
           stockList.map((key) => {
+            const isActive = key === stockToken;
+
             return (
-              <div
+              <button
+                type="button"
+                key={key}
                 id={key}
-                className={
-                  key === stockToken
-                    ? "row px-3 border border-primary"
-                    : "row px-3"
-                }
+                className={isActive ? "stocklist-item stocklist-item--active" : "stocklist-item"}
+                onClick={() => handleStockClick(key)}
               >
-                <div>
-                  <div className="float-start">
-                    <span className=" m-1" data-stocktoken={key}>
-                      {stocksDict[key]}
-                    </span>
-                  </div>
-                </div>
-              </div>
+                <span>{stocksDict[key]}</span>
+              </button>
             );
           })}
       </div>

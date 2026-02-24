@@ -1,5 +1,4 @@
 import { Routes, Route, useLocation } from "react-router-dom";
-import { useAuth } from "./Contexts/AuthContext";
 
 import Home from "./Routes/Home";
 import Trades from "./Routes/Trades";
@@ -14,14 +13,14 @@ import ProtectedRoute from "./Components/Layout/ProtectedRoute";
 
 const Routing = () => {
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
 
-  const hideNavbar =
-    location.pathname === "/login" || location.pathname === "/signup";
+  const hideNavbar = ["/login", "/signup", "/stocks"].includes(
+    location.pathname,
+  );
 
   return (
     <>
-      <Navbar />
+      {!hideNavbar && <Navbar />}
 
       <Routes>
         {/* Public Routes */}
