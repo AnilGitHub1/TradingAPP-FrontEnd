@@ -10,22 +10,25 @@ export default function Stocks() {
   const { searchActive, tradeBoxActive } = useUI();
 
   return (
-    <div className=".container-fluid">
+    <div className="stocks-page container-fluid">
       {searchActive && <Screen />}
-      <div className="container-fluid blur">
-        {searchActive && <Search />}
-        <div style={searchActive ? { filter: "blur(2px)" } : {}}>
-          <div className="row">
+
+      {searchActive && <Search />}
+
+      <div style={searchActive ? { filter: "blur(2px)" } : {}}>
+        <div className="row g-0">
+          <div className="col-12">
             <StockBar />
           </div>
-          <div className="row">
-            <div className="col-10">
-              <ChartComponent />
-              {tradeBoxActive && <TradeBox />}
-            </div>
-            <div className="col-2">
-              <StockList />
-            </div>
+        </div>
+
+        <div className="row g-0 stocks-content-row">
+          <div className="col-lg-9 col-xl-10 chart-panel">
+            <ChartComponent />
+            {tradeBoxActive && <TradeBox />}
+          </div>
+          <div className="col-lg-3 col-xl-2 stocklist-panel">
+            <StockList />
           </div>
         </div>
       </div>

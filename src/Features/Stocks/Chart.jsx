@@ -21,10 +21,12 @@ export default function ChartComponent() {
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
+    const containerHeight = chartContainerRef.current.clientHeight;
+
     const chart = createChart(chartContainerRef.current, {
       ...chartoptions,
       width: chartContainerRef.current.clientWidth,
-      height: window.innerHeight - 100,
+      height: containerHeight,
     });
 
     chart.timeScale().applyOptions(timeScaleOptions);
@@ -37,7 +39,7 @@ export default function ChartComponent() {
     const handleResize = () => {
       chart.applyOptions({
         width: chartContainerRef.current.clientWidth,
-        height: window.innerHeight - 100,
+        height: chartContainerRef.current.clientHeight,
       });
     };
 
@@ -72,11 +74,5 @@ export default function ChartComponent() {
     }
   }, [showTrendline, stockData.trendlineData]);
 
-  return (
-    <div
-      id="chart-container"
-      ref={chartContainerRef}
-      style={{ width: "100%", height: "600px" }}
-    />
-  );
+  return <div id="chart-container" ref={chartContainerRef} className="chart-container" />;
 }
