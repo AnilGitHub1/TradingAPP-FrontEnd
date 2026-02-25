@@ -5,7 +5,8 @@ import { stocksDict } from "../../Constants/constants";
 
 export default function StockBar() {
   const { stockToken } = useStock();
-  const { setSearchActive, setTradeBoxActive } = useUI();
+  const { setSearchActive, setTradeBoxActive, showTrendline, setShowTrendline } =
+    useUI();
 
   const handleOnClickName = () => {
     setSearchActive(true);
@@ -13,6 +14,10 @@ export default function StockBar() {
 
   const handleOnClickTrade = () => {
     setTradeBoxActive(true);
+  };
+
+  const handleToggleTrendline = () => {
+    setShowTrendline((prev) => !prev);
   };
 
   return (
@@ -30,13 +35,27 @@ export default function StockBar() {
         <TimeFrames />
       </div>
 
-      <button
-        type="button"
-        className="btn btn-primary stock-toolbar__trade-btn"
-        onClick={handleOnClickTrade}
-      >
-        Add Trade
-      </button>
+      <div className="stock-toolbar__actions">
+        <button
+          type="button"
+          className={
+            showTrendline
+              ? "btn btn-outline-primary stock-toolbar__trend-btn stock-toolbar__trend-btn--active"
+              : "btn btn-outline-secondary stock-toolbar__trend-btn"
+          }
+          onClick={handleToggleTrendline}
+        >
+          {showTrendline ? "Hide Trendlines" : "Show Trendlines"}
+        </button>
+
+        <button
+          type="button"
+          className="btn btn-primary stock-toolbar__trade-btn"
+          onClick={handleOnClickTrade}
+        >
+          Add Trade
+        </button>
+      </div>
     </div>
   );
 }

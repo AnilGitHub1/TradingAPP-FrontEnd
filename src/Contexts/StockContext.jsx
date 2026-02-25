@@ -18,6 +18,19 @@ export default function StockProvider({ children }) {
   });
 
   const [linesData, setLinesData] = useState([]);
+
+  const normalizeLinesPayload = (payload) => {
+    if (Array.isArray(payload)) return payload;
+
+    if (!payload || typeof payload !== "object") return [];
+
+    if (Array.isArray(payload.linesData)) return payload.linesData;
+    if (Array.isArray(payload.trendlineData)) return payload.trendlineData;
+    if (Array.isArray(payload.data)) return payload.data;
+
+    return [];
+  };
+
   const fetchStockData = useCallback(async () => {
     if (!stockToken || !timeFrame) return;
 
@@ -33,7 +46,7 @@ export default function StockProvider({ children }) {
         candleData: stockResponse.stockData || [],
       });
 
-      setLinesData(trendlineResponse.trendlineData || []);
+      setLinesData(normalizeLinesPayload(trendlineResponse));
     } catch (err) {
       console.error("Stock fetch error:", err);
       setError("Failed to fetch stock data");
@@ -42,33 +55,9 @@ export default function StockProvider({ children }) {
     }
   }, [stockToken, timeFrame]);
 
-  const fetchLineData = useCallback(async () => {
-    if (!stockToken || !timeFrame) return;
-    try {
-      setLoading(true);
-      setError(null);
-
-      const [stockResponse, trendlineResponse] = await Promise.all([
-        getStockData(stockToken, timeFrame),
-        getLinesData(stockToken, timeFrame),
-      ]);
-      // console.log(trendlineResponse);
-      setLinesData(trendlineResponse.linesData || []);
-    } catch (err) {
-      console.error("lines fetch error:", err);
-      setError("Failed to fetch trendlines data");
-    } finally {
-      setLoading(false);
-    }
-  }, [stockToken, timeFrame]);
-
   useEffect(() => {
     fetchStockData();
   }, [fetchStockData]);
-
-  useEffect(() => {
-    fetchLineData();
-  }, [fetchLineData]);
 
   return (
     <StockContext.Provider

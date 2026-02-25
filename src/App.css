@@ -1690,6 +1690,20 @@ a {
   color: #fff;
 }
 
+.stock-toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stock-toolbar__trend-btn {
+  white-space: nowrap;
+}
+
+.stock-toolbar__trend-btn--active {
+  border-color: #0d6efd;
+}
+
 .stock-toolbar__trade-btn {
   white-space: nowrap;
 }
@@ -1713,11 +1727,15 @@ a {
 .stocklist-panel {
   border-bottom: 1px solid #d7dce3;
   background: #f9fbff;
+  min-height: calc(100vh - 72px);
 }
 
 .stocklist-shell {
   border-left: 1px solid #d7dce3;
+  min-height: calc(100vh - 72px);
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .stocklist-filter {
@@ -1730,6 +1748,12 @@ a {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+}
+
+.stocklist {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
 }
 
 .stocklist-item {
