@@ -19,11 +19,12 @@ export default function ChartComponent() {
   const trendlineSeriesRef = useRef([]);
 
   const resetViewport = (candleCount) => {
-    if (!chartRef.current || !candleSeriesRef.current || candleCount === 0) return;
+    if (!chartRef.current || !candleSeriesRef.current || candleCount === 0)
+      return;
 
     const timeScale = chartRef.current.timeScale();
     const rightOffset = 8;
-    const visibleBars = Math.min(120, Math.max(60, candleCount));
+    const visibleBars = Math.min(300, Math.max(60, candleCount));
     const from = Math.max(0, candleCount - visibleBars);
     const to = candleCount - 1 + rightOffset;
 
