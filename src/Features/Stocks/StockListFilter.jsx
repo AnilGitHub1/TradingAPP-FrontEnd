@@ -25,7 +25,9 @@ export default function StockListFilter() {
 
         <select
           className="form-select"
-          onChange={(e) => setStockListSort(e.target.value)}
+          onChange={(e) => {
+            setStockListSort(e.target.value);
+          }}
           aria-label="Sort stock list"
         >
           {Object.keys(STOCK_SORT_OPTIONS).map((key) => {

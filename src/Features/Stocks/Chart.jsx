@@ -10,7 +10,7 @@ import {
 } from "../../Constants/constants";
 
 export default function ChartComponent() {
-  const { stockData } = useStock();
+  const { stockData, linesData } = useStock();
   const { showTrendline } = useUI();
 
   const chartContainerRef = useRef(null);
@@ -65,14 +65,22 @@ export default function ChartComponent() {
     });
     trendlineSeriesRef.current = [];
 
-    if (showTrendline && stockData.trendlineData.length > 0) {
-      stockData.trendlineData.forEach((line) => {
+    if (showTrendline && linesData.length > 0) {
+      linesData.forEach((line) => {
         const series = chartRef.current.addLineSeries(lineoptions);
+
+        console.log(Object.keys(line[0]));
         series.setData(line);
         trendlineSeriesRef.current.push(series);
       });
     }
-  }, [showTrendline, stockData.trendlineData]);
+  }, [showTrendline, linesData]);
 
-  return <div id="chart-container" ref={chartContainerRef} className="chart-container" />;
+  return (
+    <div
+      id="chart-container"
+      ref={chartContainerRef}
+      className="chart-container"
+    />
+  );
 }

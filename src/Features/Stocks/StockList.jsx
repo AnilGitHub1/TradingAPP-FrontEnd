@@ -67,7 +67,11 @@ export default function StockList() {
                 type="button"
                 key={key}
                 id={key}
-                className={isActive ? "stocklist-item stocklist-item--active" : "stocklist-item"}
+                className={
+                  isActive
+                    ? "stocklist-item stocklist-item--active"
+                    : "stocklist-item"
+                }
                 onClick={() => handleStockClick(key)}
               >
                 <span>{stocksDict[key]}</span>

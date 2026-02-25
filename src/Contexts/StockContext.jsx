@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
-import { getStockData } from "../Services/stockService";
+import { getStockData, getLinesData } from "../Services/stockService";
 
 export const StockContext = createContext();
 
@@ -10,12 +10,11 @@ export default function StockProvider({ children }) {
   const [stockToken, setStockToken] = useState(474);
   const [timeFrame, setTimeFrame] = useState("ONE_HOUR");
 
-  const [stockListCategory, setStockListCategory] = useState("all");
-  const [stockListSort, setStockListSort] = useState("alphabets");
+  const [stockListCategory, setStockListCategory] = useState("n50");
+  const [stockListSort, setStockListSort] = useState("alphabetic");
 
   const [stockData, setStockData] = useState({
     candleData: [],
-    trendlineData: [],
   });
 
   const [linesData, setLinesData] = useState([]);
@@ -26,14 +25,15 @@ export default function StockProvider({ children }) {
       setLoading(true);
       setError(null);
 
-      const response = await getStockData(stockToken, timeFrame);
-
+      const [stockResponse, trendlineResponse] = await Promise.all([
+        getStockData(stockToken, timeFrame),
+        getLinesData(stockToken, timeFrame),
+      ]);
       setStockData({
-        candleData: response.stockData || [],
-        trendlineData: response.trendlineData || [],
+        candleData: stockResponse.stockData || [],
       });
 
-      setLinesData(response.linesData || []);
+      setLinesData(trendlineResponse.trendlineData || []);
     } catch (err) {
       console.error("Stock fetch error:", err);
       setError("Failed to fetch stock data");
@@ -42,9 +42,33 @@ export default function StockProvider({ children }) {
     }
   }, [stockToken, timeFrame]);
 
+  const fetchLineData = useCallback(async () => {
+    if (!stockToken || !timeFrame) return;
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [stockResponse, trendlineResponse] = await Promise.all([
+        getStockData(stockToken, timeFrame),
+        getLinesData(stockToken, timeFrame),
+      ]);
+      // console.log(trendlineResponse);
+      setLinesData(trendlineResponse.linesData || []);
+    } catch (err) {
+      console.error("lines fetch error:", err);
+      setError("Failed to fetch trendlines data");
+    } finally {
+      setLoading(false);
+    }
+  }, [stockToken, timeFrame]);
+
   useEffect(() => {
     fetchStockData();
   }, [fetchStockData]);
+
+  useEffect(() => {
+    fetchLineData();
+  }, [fetchLineData]);
 
   return (
     <StockContext.Provider

@@ -23,14 +23,12 @@ export const STOCK_LIST_CATEGORY_OPTIONS = {
   n100: "NIFTY-100",
   n200: "NIFTY-200",
   n500: "NIFTY-500",
-  n1000: "NIFTY-1000",
 };
 
 export const STOCK_SORT_OPTIONS = {
-  alphabets: "Alphabetically",
-  cap: "Market Cap",
-  H: "down-trendline",
-  L: "up-trendline",
+  Alphabetic: "Alphabetic",
+  Mcap: "Mcap",
+  Trend: "Trend",
 };
 
 export const chartoptions = {

@@ -29,10 +29,14 @@ export async function getCandlesByToken(
 
 export const getStockList = async (timeFrame, category, sort) => {
   try {
-    const response = await api.get(
-      `/stocklist/${timeFrame}/${category}/${sort}`,
-    );
-    return response.data;
+    const { data } = await api.get(`api/StockDetails/stocklist`, {
+      params: {
+        category,
+        tf: TIME_FRAMES[timeFrame],
+        sort,
+      },
+    });
+    return data;
   } catch (error) {
     console.error("Error fetching stock list:", error);
     throw error;
@@ -43,6 +47,19 @@ export const getStockData = async (stockToken, timeFrame) => {
   const basePath = INTRADAY_TIMEFRAMES.includes(timeFrame)
     ? "api/FifteenTF/stockdata"
     : "api/DailyTF/stockdata";
+  //query params
+  const { data } = await api.get(basePath, {
+    params: {
+      token: stockToken,
+      tf: TIME_FRAMES[timeFrame],
+    },
+  });
+  // console.log(response);
+  return data;
+};
+
+export const getLinesData = async (stockToken, timeFrame) => {
+  const basePath = "api/Trendline/byToken";
   //query params
   const { data } = await api.get(basePath, {
     params: {
