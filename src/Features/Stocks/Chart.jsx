@@ -18,14 +18,23 @@ export default function ChartComponent() {
   const candleSeriesRef = useRef(null);
   const trendlineSeriesRef = useRef([]);
 
-  const resetViewport = () => {
-    if (!chartRef.current || !candleSeriesRef.current) return;
+  const resetViewport = (candleCount) => {
+    if (!chartRef.current || !candleSeriesRef.current || candleCount === 0) return;
+
+    const timeScale = chartRef.current.timeScale();
+    const rightOffset = 8;
+    const visibleBars = Math.min(120, Math.max(60, candleCount));
+    const from = Math.max(0, candleCount - visibleBars);
+    const to = candleCount - 1 + rightOffset;
 
     chartRef.current.priceScale("right").applyOptions({ autoScale: true });
 
     requestAnimationFrame(() => {
-      chartRef.current.timeScale().fitContent();
-      chartRef.current.timeScale().scrollToRealTime();
+      timeScale.applyOptions({
+        rightOffset,
+        barSpacing: 8,
+      });
+      timeScale.setVisibleLogicalRange({ from, to });
     });
   };
 
@@ -65,7 +74,7 @@ export default function ChartComponent() {
   useEffect(() => {
     if (candleSeriesRef.current && stockData.candleData.length > 0) {
       candleSeriesRef.current.setData(stockData.candleData);
-      resetViewport();
+      resetViewport(stockData.candleData.length);
     }
   }, [stockData.candleData]);
 
