@@ -12,25 +12,8 @@ export default function StockList() {
     stockListCategory,
     stockListSort,
   } = useStock();
-  const [divHeight, setDivHeight] = useState(window.innerHeight - 220);
 
   const [stockList, setStockList] = useState([]);
-  useEffect(() => {
-    const handleResize = () => {
-      setDivHeight(window.innerHeight - 220);
-    };
-
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
-  const divStyle = {
-    height: `${divHeight}px`,
-    overflow: "auto",
-  };
 
   const handleStockClick = (token) => {
     setStockToken(token);
@@ -43,7 +26,7 @@ export default function StockList() {
         stockListCategory,
         stockListSort,
       );
-      setStockList(data.tokensList);
+      setStockList(data.tokensList || []);
     } catch (err) {
       console.error(err);
     }
@@ -57,27 +40,26 @@ export default function StockList() {
     <div className="stocklist-shell">
       <StockListFilter />
 
-      <div className="stocklist" style={divStyle}>
-        {stockList &&
-          stockList.map((key) => {
-            const isActive = key === stockToken;
+      <div className="stocklist">
+        {stockList.map((key) => {
+          const isActive = key === stockToken;
 
-            return (
-              <button
-                type="button"
-                key={key}
-                id={key}
-                className={
-                  isActive
-                    ? "stocklist-item stocklist-item--active"
-                    : "stocklist-item"
-                }
-                onClick={() => handleStockClick(key)}
-              >
-                <span>{stocksDict[key]}</span>
-              </button>
-            );
-          })}
+          return (
+            <button
+              type="button"
+              key={key}
+              id={key}
+              className={
+                isActive
+                  ? "stocklist-item stocklist-item--active"
+                  : "stocklist-item"
+              }
+              onClick={() => handleStockClick(key)}
+            >
+              <span>{stocksDict[key]}</span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
