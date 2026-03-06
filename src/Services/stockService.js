@@ -18,15 +18,6 @@ export async function getCandlesByToken(
   return res.data;
 }
 
-/**
- * stock list - if you keep dictionary on frontend, you can omit this.
- * If backend has /api/Stocks/list return list of {name, token, ...}
- */
-// export async function getStockList() {
-//   const res = await api.get(`/api/Stocks/list`);
-//   return res.data;
-// }
-
 export const getStockList = async (timeFrame, category, sort) => {
   try {
     const { data } = await api.get(`api/StockDetails/stocklist`, {
@@ -47,21 +38,19 @@ export const getStockData = async (stockToken, timeFrame) => {
   const basePath = INTRADAY_TIMEFRAMES.includes(timeFrame)
     ? "api/FifteenTF/stockdata"
     : "api/DailyTF/stockdata";
-  //query params
+
   const { data } = await api.get(basePath, {
     params: {
       token: stockToken,
       tf: TIME_FRAMES[timeFrame],
     },
   });
-  // console.log(response);
+
   return data;
 };
 
 export const getLinesData = async (stockToken, timeFrame) => {
-  const basePath = "api/Trendline/byToken";
-  //query params
-  const { data } = await api.get(basePath, {
+  const { data } = await api.get("api/Trendline/byToken", {
     params: {
       token: stockToken,
       tf: TIME_FRAMES[timeFrame],
@@ -73,6 +62,16 @@ export const getLinesData = async (stockToken, timeFrame) => {
 
 export const saveLineData = async (payload) => {
   const { data } = await api.post("api/Trendline", payload);
+  return data;
+};
+
+export const updateLineData = async (lineId, payload) => {
+  const { data } = await api.put(`api/Trendline/${lineId}`, payload);
+  return data;
+};
+
+export const deleteLineData = async (lineId) => {
+  const { data } = await api.delete(`api/Trendline/${lineId}`);
   return data;
 };
 

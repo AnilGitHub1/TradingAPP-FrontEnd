@@ -1813,6 +1813,13 @@ a {
   align-items: center;
 }
 
+.stocklist-item__bookmark-trigger {
+  border: none;
+  background: transparent;
+  padding: 0;
+  line-height: 0;
+}
+
 .stocklist-item__bookmark {
   width: 12px;
   height: 12px;
@@ -1836,7 +1843,7 @@ a {
   z-index: 50;
 }
 
-.stocklist-item__bookmark-wrap:hover .stocklist-item__bookmark-palette {
+.stocklist-item__bookmark-wrap--open .stocklist-item__bookmark-palette {
   display: inline-flex;
 }
 
