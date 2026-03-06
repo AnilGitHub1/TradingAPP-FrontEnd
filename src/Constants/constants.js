@@ -23,6 +23,21 @@ export const STOCK_LIST_CATEGORY_OPTIONS = {
   n100: "NIFTY-100",
   n200: "NIFTY-200",
   n500: "NIFTY-500",
+  redList: "Red List",
+  blueList: "Blue List",
+  blackList: "Black List",
+  greenList: "Green List",
+  yellowList: "Yellow List",
+};
+
+export const BOOKMARK_COLORS = ["red", "blue", "black", "green", "yellow"];
+
+export const BOOKMARK_FILTER_TO_COLOR = {
+  redList: "red",
+  blueList: "blue",
+  blackList: "black",
+  greenList: "green",
+  yellowList: "yellow",
 };
 
 export const STOCK_SORT_OPTIONS = {
@@ -67,8 +82,10 @@ export const candleoptions = {
 
 export const lineoptions = {
   color: "rgba(45, 85, 255, 1)",
-  lineWidth: 0.7,
-  crosshairMarkerVisible: true,
+  lineWidth: 1.1,
+  crosshairMarkerVisible: false,
+  lastValueVisible: false,
+  priceLineVisible: false,
 };
 
 export const timeScaleOptions = {

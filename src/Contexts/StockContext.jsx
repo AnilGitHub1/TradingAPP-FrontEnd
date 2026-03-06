@@ -1,5 +1,10 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
-import { getStockData, getLinesData, saveLineData } from "../Services/stockService";
+import {
+  getStockData,
+  getLinesData,
+  saveLineData,
+  saveBookmark,
+} from "../Services/stockService";
 import { TIME_FRAMES } from "../Constants/constants";
 
 export const StockContext = createContext();
@@ -19,6 +24,7 @@ export default function StockProvider({ children }) {
   });
 
   const [linesData, setLinesData] = useState([]);
+  const [bookmarksByToken, setBookmarksByToken] = useState({});
 
   const normalizeLinesPayload = (payload) => {
     if (Array.isArray(payload)) return payload;
@@ -69,7 +75,6 @@ export default function StockProvider({ children }) {
         endValue: endPoint.value,
       };
 
-      // Optimistic update so the newly drawn line remains visible immediately.
       setLinesData((prev) => [...prev, [startPoint, endPoint]]);
 
       try {
@@ -83,6 +88,22 @@ export default function StockProvider({ children }) {
     },
     [stockToken, timeFrame],
   );
+
+  const setBookmarkColor = useCallback(async (token, bookmarkType) => {
+    if (!token || !bookmarkType) return;
+
+    setBookmarksByToken((prev) => ({
+      ...prev,
+      [token]: bookmarkType,
+    }));
+
+    try {
+      await saveBookmark({ token, bookmarkType });
+    } catch (bookmarkError) {
+      console.error("Bookmark save error:", bookmarkError);
+      throw bookmarkError;
+    }
+  }, []);
 
   useEffect(() => {
     fetchStockData();
@@ -104,6 +125,8 @@ export default function StockProvider({ children }) {
         setLinesData,
         fetchStockData,
         addTrendline,
+        bookmarksByToken,
+        setBookmarkColor,
         loading,
         error,
       }}

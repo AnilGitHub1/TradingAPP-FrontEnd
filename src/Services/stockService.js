@@ -75,3 +75,8 @@ export const saveLineData = async (payload) => {
   const { data } = await api.post("api/Trendline", payload);
   return data;
 };
+
+export const saveBookmark = async ({ token, bookmarkType }) => {
+  const { data } = await api.post("api/Bookmarks", { token, bookmarkType });
+  return data;
+};

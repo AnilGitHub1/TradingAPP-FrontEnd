@@ -1720,9 +1720,42 @@ a {
   height: calc(100vh - 72px);
 }
 
+.chart-shell {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 72px);
+}
+
 .chart-container {
   width: 100%;
   height: calc(100vh - 72px);
+}
+
+.trendline-context-menu {
+  position: absolute;
+  z-index: 1000;
+  min-width: 140px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.2);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.trendline-context-menu button {
+  border: none;
+  background: #fff;
+  text-align: left;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.trendline-context-menu button:hover {
+  background: #eff6ff;
 }
 
 .stocklist-panel {
@@ -1769,6 +1802,50 @@ a {
   padding: 10px 12px;
   font-size: 13px;
   color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stocklist-item__bookmark-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.stocklist-item__bookmark {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid #94a3b8;
+  display: inline-block;
+}
+
+.stocklist-item__bookmark-palette {
+  position: absolute;
+  left: 18px;
+  top: -6px;
+  display: none;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.2);
+  z-index: 50;
+}
+
+.stocklist-item__bookmark-wrap:hover .stocklist-item__bookmark-palette {
+  display: inline-flex;
+}
+
+.stocklist-item__bookmark-color {
+  width: 14px;
+  height: 14px;
+  border: 1px solid #64748b;
+  border-radius: 2px;
+  padding: 0;
 }
 
 .stocklist-item:hover {
