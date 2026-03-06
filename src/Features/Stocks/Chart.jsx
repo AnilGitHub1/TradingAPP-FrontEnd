@@ -11,7 +11,7 @@ import {
 
 export default function ChartComponent() {
   const { stockData, linesData, addTrendline } = useStock();
-  const { showTrendline, drawTrendlineMode } = useUI();
+  const { showTrendline, drawTrendlineMode, setShowTrendline } = useUI();
 
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
@@ -89,7 +89,7 @@ export default function ChartComponent() {
     });
     trendlineSeriesRef.current = [];
 
-    if (!showTrendline || linesData.length === 0) return;
+    if ((!showTrendline && !drawTrendlineMode) || linesData.length === 0) return;
 
     linesData.forEach((line) => {
       if (!Array.isArray(line) || line.length < 2) return;
@@ -112,7 +112,7 @@ export default function ChartComponent() {
       series.setData(normalizedLine);
       trendlineSeriesRef.current.push(series);
     });
-  }, [showTrendline, linesData]);
+  }, [showTrendline, drawTrendlineMode, linesData]);
 
   useEffect(() => {
     if (!chartRef.current || !candleSeriesRef.current) return;
@@ -173,6 +173,7 @@ export default function ChartComponent() {
 
       try {
         await addTrendline({ startPoint, endPoint });
+        setShowTrendline(true);
       } catch (error) {
         console.error("Failed to save trendline:", error);
       }
@@ -188,7 +189,7 @@ export default function ChartComponent() {
       chartRef.current.unsubscribeCrosshairMove(handleCrosshairMove);
       chartRef.current.unsubscribeClick(handleChartClick);
     };
-  }, [drawTrendlineMode, addTrendline]);
+  }, [drawTrendlineMode, addTrendline, setShowTrendline]);
 
   return (
     <div

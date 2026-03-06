@@ -69,30 +69,15 @@ export default function StockProvider({ children }) {
         endValue: endPoint.value,
       };
 
-      const savedLine = await saveLineData(payload);
+      // Optimistic update so the newly drawn line remains visible immediately.
+      setLinesData((prev) => [...prev, [startPoint, endPoint]]);
 
-      setLinesData((prev) => {
-        const normalized = normalizeLinesPayload(savedLine);
-        if (normalized.length > 0) {
-          return [...prev, ...normalized];
-        }
-
-        if (Array.isArray(savedLine) && savedLine.length > 0) {
-          return [...prev, ...savedLine];
-        }
-
-        if (savedLine?.startTime !== undefined && savedLine?.endTime !== undefined) {
-          return [
-            ...prev,
-            [
-              { time: savedLine.startTime, value: Number(savedLine.startValue) },
-              { time: savedLine.endTime, value: Number(savedLine.endValue) },
-            ],
-          ];
-        }
-
-        return [...prev, [startPoint, endPoint]];
-      });
+      try {
+        await saveLineData(payload);
+      } catch (saveError) {
+        console.error("Trendline save error:", saveError);
+        throw saveError;
+      }
 
       return payload;
     },
