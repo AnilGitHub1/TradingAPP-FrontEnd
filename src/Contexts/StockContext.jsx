@@ -23,6 +23,14 @@ const getLinePoints = (line) => {
   return [];
 };
 
+const getLineId = (line) =>
+  line?.id || line?.trendlineId || line?.lineId || line?._id || null;
+
+const mergeLineWithPoints = (line, points) => {
+  if (Array.isArray(line)) return points;
+  return { ...line, points };
+};
+
 export default function StockProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -82,12 +90,28 @@ export default function StockProvider({ children }) {
       if (!startPoint || !endPoint) return;
 
       const payload = buildTrendlinePayload(startPoint, endPoint);
-      const optimisticLine = [startPoint, endPoint];
+      const optimisticLine = {
+        id: `temp-${Date.now()}-${Math.random()}`,
+        points: [startPoint, endPoint],
+      };
       setLinesData((prev) => [...prev, optimisticLine]);
 
       try {
-        await saveLineData(payload);
+        const savedLine = await saveLineData(payload);
+        const normalizedSaved = normalizeLinesPayload(savedLine);
+
+        setLinesData((prev) => {
+          const withoutOptimistic = prev.filter((line) => line !== optimisticLine);
+          if (normalizedSaved.length > 0) {
+            return [...withoutOptimistic, ...normalizedSaved];
+          }
+          if (savedLine && typeof savedLine === "object") {
+            return [...withoutOptimistic, savedLine];
+          }
+          return [...withoutOptimistic, optimisticLine];
+        });
       } catch (saveError) {
+        setLinesData((prev) => prev.filter((line) => line !== optimisticLine));
         console.error("Trendline save error:", saveError);
         throw saveError;
       }
@@ -102,15 +126,16 @@ export default function StockProvider({ children }) {
       if (!Number.isInteger(lineIndex) || !startPoint || !endPoint) return;
 
       const payload = buildTrendlinePayload(startPoint, endPoint);
+      const nextPoints = [startPoint, endPoint];
 
       setLinesData((prev) =>
         prev.map((line, index) =>
-          index === lineIndex ? [startPoint, endPoint] : line,
+          index === lineIndex ? mergeLineWithPoints(line, nextPoints) : line,
         ),
       );
 
       const existingLine = linesData[lineIndex];
-      const existingLineId = existingLine?.id || existingLine?.trendlineId;
+      const existingLineId = getLineId(existingLine);
 
       try {
         if (existingLineId) {
@@ -131,12 +156,12 @@ export default function StockProvider({ children }) {
       if (!Number.isInteger(lineIndex)) return;
 
       const existingLine = linesData[lineIndex];
-      const existingLineId = existingLine?.id || existingLine?.trendlineId;
+      const existingLineId = getLineId(existingLine);
 
       setLinesData((prev) => prev.filter((_, index) => index !== lineIndex));
 
       try {
-        if (existingLineId) {
+        if (existingLineId && !String(existingLineId).startsWith("temp-")) {
           await deleteLineData(existingLineId);
         }
       } catch (deleteError) {
