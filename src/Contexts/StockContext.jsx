@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
-import { getStockData, getLinesData } from "../Services/stockService";
+import { getStockData, getLinesData, saveLineData } from "../Services/stockService";
+import { TIME_FRAMES } from "../Constants/constants";
 
 export const StockContext = createContext();
 
@@ -55,6 +56,49 @@ export default function StockProvider({ children }) {
     }
   }, [stockToken, timeFrame]);
 
+  const addTrendline = useCallback(
+    async ({ startPoint, endPoint }) => {
+      if (!startPoint || !endPoint) return;
+
+      const payload = {
+        token: stockToken,
+        tf: TIME_FRAMES[timeFrame],
+        startTime: startPoint.time,
+        startValue: startPoint.value,
+        endTime: endPoint.time,
+        endValue: endPoint.value,
+      };
+
+      const savedLine = await saveLineData(payload);
+
+      setLinesData((prev) => {
+        const normalized = normalizeLinesPayload(savedLine);
+        if (normalized.length > 0) {
+          return [...prev, ...normalized];
+        }
+
+        if (Array.isArray(savedLine) && savedLine.length > 0) {
+          return [...prev, ...savedLine];
+        }
+
+        if (savedLine?.startTime !== undefined && savedLine?.endTime !== undefined) {
+          return [
+            ...prev,
+            [
+              { time: savedLine.startTime, value: Number(savedLine.startValue) },
+              { time: savedLine.endTime, value: Number(savedLine.endValue) },
+            ],
+          ];
+        }
+
+        return [...prev, [startPoint, endPoint]];
+      });
+
+      return payload;
+    },
+    [stockToken, timeFrame],
+  );
+
   useEffect(() => {
     fetchStockData();
   }, [fetchStockData]);
@@ -74,6 +118,7 @@ export default function StockProvider({ children }) {
         linesData,
         setLinesData,
         fetchStockData,
+        addTrendline,
         loading,
         error,
       }}

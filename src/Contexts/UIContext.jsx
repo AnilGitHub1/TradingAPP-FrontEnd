@@ -6,6 +6,7 @@ export default function UIProvider({ children }) {
   const [searchActive, setSearchActive] = useState(false);
   const [tradeBoxActive, setTradeBoxActive] = useState(false);
   const [showTrendline, setShowTrendline] = useState(false);
+  const [drawTrendlineMode, setDrawTrendlineMode] = useState(false);
 
   return (
     <UIContext.Provider
@@ -16,6 +17,8 @@ export default function UIProvider({ children }) {
         setTradeBoxActive,
         showTrendline,
         setShowTrendline,
+        drawTrendlineMode,
+        setDrawTrendlineMode,
       }}
     >
       {children}

@@ -10,13 +10,15 @@ import {
 } from "../../Constants/constants";
 
 export default function ChartComponent() {
-  const { stockData, linesData } = useStock();
-  const { showTrendline } = useUI();
+  const { stockData, linesData, addTrendline } = useStock();
+  const { showTrendline, drawTrendlineMode } = useUI();
 
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
   const candleSeriesRef = useRef(null);
   const trendlineSeriesRef = useRef([]);
+  const firstPointRef = useRef(null);
+  const previewSeriesRef = useRef(null);
 
   const resetViewport = (candleCount) => {
     if (!chartRef.current || !candleSeriesRef.current || candleCount === 0)
@@ -111,6 +113,82 @@ export default function ChartComponent() {
       trendlineSeriesRef.current.push(series);
     });
   }, [showTrendline, linesData]);
+
+  useEffect(() => {
+    if (!chartRef.current || !candleSeriesRef.current) return;
+
+    const clearPreview = () => {
+      if (!chartRef.current || !previewSeriesRef.current) return;
+      chartRef.current.removeSeries(previewSeriesRef.current);
+      previewSeriesRef.current = null;
+    };
+
+    const createPreviewSeriesIfNeeded = () => {
+      if (!chartRef.current || previewSeriesRef.current) return;
+      previewSeriesRef.current = chartRef.current.addLineSeries({
+        ...lineoptions,
+        color: "rgba(255, 140, 0, 1)",
+        lineWidth: 2,
+      });
+    };
+
+    const getPointFromParam = (param) => {
+      if (!param?.point || !chartRef.current || !candleSeriesRef.current) return null;
+
+      const time = chartRef.current.timeScale().coordinateToTime(param.point.x);
+      const value = candleSeriesRef.current.coordinateToPrice(param.point.y);
+
+      if (time === null || time === undefined || !Number.isFinite(value)) return null;
+      return { time, value };
+    };
+
+    const handleCrosshairMove = (param) => {
+      if (!drawTrendlineMode || !firstPointRef.current) return;
+
+      const secondPoint = getPointFromParam(param);
+      if (!secondPoint) return;
+
+      createPreviewSeriesIfNeeded();
+      previewSeriesRef.current.setData([firstPointRef.current, secondPoint]);
+    };
+
+    const handleChartClick = async (param) => {
+      if (!drawTrendlineMode) return;
+
+      const clickedPoint = getPointFromParam(param);
+      if (!clickedPoint) return;
+
+      if (!firstPointRef.current) {
+        firstPointRef.current = clickedPoint;
+        createPreviewSeriesIfNeeded();
+        previewSeriesRef.current.setData([clickedPoint, clickedPoint]);
+        return;
+      }
+
+      const startPoint = firstPointRef.current;
+      const endPoint = clickedPoint;
+
+      firstPointRef.current = null;
+      clearPreview();
+
+      try {
+        await addTrendline({ startPoint, endPoint });
+      } catch (error) {
+        console.error("Failed to save trendline:", error);
+      }
+    };
+
+    chartRef.current.subscribeCrosshairMove(handleCrosshairMove);
+    chartRef.current.subscribeClick(handleChartClick);
+
+    return () => {
+      firstPointRef.current = null;
+      clearPreview();
+      if (!chartRef.current) return;
+      chartRef.current.unsubscribeCrosshairMove(handleCrosshairMove);
+      chartRef.current.unsubscribeClick(handleChartClick);
+    };
+  }, [drawTrendlineMode, addTrendline]);
 
   return (
     <div

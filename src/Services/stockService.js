@@ -70,3 +70,8 @@ export const getLinesData = async (stockToken, timeFrame) => {
 
   return data;
 };
+
+export const saveLineData = async (payload) => {
+  const { data } = await api.post("api/Trendline", payload);
+  return data;
+};
