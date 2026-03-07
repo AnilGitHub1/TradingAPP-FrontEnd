@@ -5,8 +5,14 @@ import { stocksDict } from "../../Constants/constants";
 
 export default function StockBar() {
   const { stockToken } = useStock();
-  const { setSearchActive, setTradeBoxActive, showTrendline, setShowTrendline } =
-    useUI();
+  const {
+    setSearchActive,
+    setTradeBoxActive,
+    showTrendline,
+    setShowTrendline,
+    drawTrendlineMode,
+    setDrawTrendlineMode,
+  } = useUI();
 
   const handleOnClickName = () => {
     setSearchActive(true);
@@ -18,6 +24,16 @@ export default function StockBar() {
 
   const handleToggleTrendline = () => {
     setShowTrendline((prev) => !prev);
+  };
+
+  const handleToggleDrawTrendline = () => {
+    setDrawTrendlineMode((prev) => {
+      const next = !prev;
+      if (next) {
+        setShowTrendline(true);
+      }
+      return next;
+    });
   };
 
   return (
@@ -46,6 +62,18 @@ export default function StockBar() {
           onClick={handleToggleTrendline}
         >
           {showTrendline ? "Hide Trendlines" : "Show Trendlines"}
+        </button>
+
+        <button
+          type="button"
+          className={
+            drawTrendlineMode
+              ? "btn btn-outline-primary stock-toolbar__trend-btn stock-toolbar__trend-btn--active"
+              : "btn btn-outline-secondary stock-toolbar__trend-btn"
+          }
+          onClick={handleToggleDrawTrendline}
+        >
+          {drawTrendlineMode ? "Drawing: ON" : "Draw Trendline"}
         </button>
 
         <button
