@@ -11,6 +11,29 @@ import { TIME_FRAMES } from "../Constants/constants";
 
 export const StockContext = createContext();
 
+const LOCAL_TRENDLINE_PREFIX = "ta_trendlines";
+
+const sortByTime = (points) => {
+  if (!Array.isArray(points)) return [];
+
+  const sorted = [...points].sort((a, b) => {
+    const at = typeof a.time === "number" ? a.time : Number(a.time);
+    const bt = typeof b.time === "number" ? b.time : Number(b.time);
+    if (Number.isNaN(at) || Number.isNaN(bt)) return 0;
+    return at - bt;
+  });
+
+  // lightweight-charts line series expects strictly increasing time values.
+  if (sorted.length >= 2 && sorted[0].time === sorted[1].time) {
+    const secondTime = sorted[1].time;
+    if (typeof secondTime === "number") {
+      sorted[1] = { ...sorted[1], time: secondTime + 1 };
+    }
+  }
+
+  return sorted;
+};
+
 const getLinePoints = (line) => {
   if (Array.isArray(line)) return line;
   if (Array.isArray(line?.points)) return line.points;
@@ -26,19 +49,33 @@ const getLinePoints = (line) => {
 const getLineId = (line) =>
   line?.id || line?.trendlineId || line?.lineId || line?._id || null;
 
-const sortByTime = (points) => {
-  if (!Array.isArray(points)) return [];
-  return [...points].sort((a, b) => {
-    const at = typeof a.time === "number" ? a.time : Number(a.time);
-    const bt = typeof b.time === "number" ? b.time : Number(b.time);
-    if (Number.isNaN(at) || Number.isNaN(bt)) return 0;
-    return at - bt;
-  });
-};
-
 const mergeLineWithPoints = (line, points) => {
   if (Array.isArray(line)) return points;
   return { ...line, points };
+};
+
+const buildTrendlineStorageKey = (stockToken, timeFrame) =>
+  `${LOCAL_TRENDLINE_PREFIX}:${stockToken}:${timeFrame}`;
+
+const readLocalTrendlines = (stockToken, timeFrame) => {
+  try {
+    const key = buildTrendlineStorageKey(stockToken, timeFrame);
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeLocalTrendlines = (stockToken, timeFrame, lines) => {
+  try {
+    const key = buildTrendlineStorageKey(stockToken, timeFrame);
+    localStorage.setItem(key, JSON.stringify(lines));
+  } catch {
+    // localStorage failure should not block UI.
+  }
 };
 
 export default function StockProvider({ children }) {
@@ -67,6 +104,8 @@ export default function StockProvider({ children }) {
   const fetchStockData = useCallback(async () => {
     if (!stockToken || !timeFrame) return;
 
+    const localLines = readLocalTrendlines(stockToken, timeFrame);
+
     try {
       setLoading(true);
       setError(null);
@@ -77,10 +116,23 @@ export default function StockProvider({ children }) {
       ]);
 
       setStockData({ candleData: stockResponse.stockData || [] });
-      setLinesData(normalizeLinesPayload(trendlineResponse));
+
+      const serverLines = normalizeLinesPayload(trendlineResponse);
+      const mergedLines = localLines.length > 0 ? localLines : serverLines;
+      setLinesData(mergedLines);
+      writeLocalTrendlines(stockToken, timeFrame, mergedLines);
     } catch (err) {
       console.error("Stock fetch error:", err);
       setError("Failed to fetch stock data");
+
+      try {
+        const stockResponse = await getStockData(stockToken, timeFrame);
+        setStockData({ candleData: stockResponse.stockData || [] });
+      } catch (stockErr) {
+        console.error("Stock data fetch fallback error:", stockErr);
+      }
+
+      setLinesData(localLines);
     } finally {
       setLoading(false);
     }
@@ -108,7 +160,12 @@ export default function StockProvider({ children }) {
         id: `temp-${Date.now()}-${Math.random()}`,
         points: sortedPoints,
       };
-      setLinesData((prev) => [...prev, optimisticLine]);
+
+      setLinesData((prev) => {
+        const next = [...prev, optimisticLine];
+        writeLocalTrendlines(stockToken, timeFrame, next);
+        return next;
+      });
 
       try {
         const savedLine = await saveLineData(payload);
@@ -116,18 +173,22 @@ export default function StockProvider({ children }) {
 
         setLinesData((prev) => {
           const withoutOptimistic = prev.filter((line) => line !== optimisticLine);
+          let next = withoutOptimistic;
+
           if (normalizedSaved.length > 0) {
-            return [...withoutOptimistic, ...normalizedSaved];
+            next = [...withoutOptimistic, ...normalizedSaved];
+          } else if (savedLine && typeof savedLine === "object") {
+            next = [...withoutOptimistic, savedLine];
+          } else {
+            next = [...withoutOptimistic, optimisticLine];
           }
-          if (savedLine && typeof savedLine === "object") {
-            return [...withoutOptimistic, savedLine];
-          }
-          return [...withoutOptimistic, optimisticLine];
+
+          writeLocalTrendlines(stockToken, timeFrame, next);
+          return next;
         });
       } catch (saveError) {
-        setLinesData((prev) => prev.filter((line) => line !== optimisticLine));
-        console.error("Trendline save error:", saveError);
-        throw saveError;
+        // API can fail while backend is not ready; keep UI/local data intact.
+        console.error("Trendline save error (non-blocking):", saveError);
       }
 
       return payload;
@@ -142,24 +203,26 @@ export default function StockProvider({ children }) {
       const nextPoints = sortByTime([startPoint, endPoint]);
       const payload = buildTrendlinePayload(nextPoints[0], nextPoints[1]);
 
-      setLinesData((prev) =>
-        prev.map((line, index) =>
-          index === lineIndex ? mergeLineWithPoints(line, nextPoints) : line,
-        ),
-      );
-
       const existingLine = linesData[lineIndex];
       const existingLineId = getLineId(existingLine);
 
+      setLinesData((prev) => {
+        const next = prev.map((line, index) =>
+          index === lineIndex ? mergeLineWithPoints(line, nextPoints) : line,
+        );
+        writeLocalTrendlines(stockToken, timeFrame, next);
+        return next;
+      });
+
       try {
-        if (existingLineId) {
+        if (existingLineId && !String(existingLineId).startsWith("temp-")) {
           await updateLineData(existingLineId, payload);
         } else {
           await saveLineData(payload);
         }
       } catch (updateError) {
-        console.error("Trendline update error:", updateError);
-        throw updateError;
+        // Non-blocking while backend endpoints are not ready.
+        console.error("Trendline update error (non-blocking):", updateError);
       }
     },
     [linesData, stockToken, timeFrame],
@@ -172,18 +235,22 @@ export default function StockProvider({ children }) {
       const existingLine = linesData[lineIndex];
       const existingLineId = getLineId(existingLine);
 
-      setLinesData((prev) => prev.filter((_, index) => index !== lineIndex));
+      setLinesData((prev) => {
+        const next = prev.filter((_, index) => index !== lineIndex);
+        writeLocalTrendlines(stockToken, timeFrame, next);
+        return next;
+      });
 
       try {
         if (existingLineId && !String(existingLineId).startsWith("temp-")) {
           await deleteLineData(existingLineId);
         }
       } catch (deleteError) {
-        console.error("Trendline delete error:", deleteError);
-        throw deleteError;
+        // Non-blocking while backend endpoints are not ready.
+        console.error("Trendline delete error (non-blocking):", deleteError);
       }
     },
-    [linesData],
+    [linesData, stockToken, timeFrame],
   );
 
   const setBookmarkColor = useCallback(async (token, bookmarkType) => {
