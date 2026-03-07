@@ -26,6 +26,16 @@ const getLinePoints = (line) => {
 const getLineId = (line) =>
   line?.id || line?.trendlineId || line?.lineId || line?._id || null;
 
+const sortByTime = (points) => {
+  if (!Array.isArray(points)) return [];
+  return [...points].sort((a, b) => {
+    const at = typeof a.time === "number" ? a.time : Number(a.time);
+    const bt = typeof b.time === "number" ? b.time : Number(b.time);
+    if (Number.isNaN(at) || Number.isNaN(bt)) return 0;
+    return at - bt;
+  });
+};
+
 const mergeLineWithPoints = (line, points) => {
   if (Array.isArray(line)) return points;
   return { ...line, points };
@@ -76,23 +86,27 @@ export default function StockProvider({ children }) {
     }
   }, [stockToken, timeFrame]);
 
-  const buildTrendlinePayload = (startPoint, endPoint) => ({
-    token: stockToken,
-    tf: TIME_FRAMES[timeFrame],
-    startTime: startPoint.time,
-    startValue: startPoint.value,
-    endTime: endPoint.time,
-    endValue: endPoint.value,
-  });
+  const buildTrendlinePayload = (startPoint, endPoint) => {
+    const sorted = sortByTime([startPoint, endPoint]);
+    return {
+      token: stockToken,
+      tf: TIME_FRAMES[timeFrame],
+      startTime: sorted[0].time,
+      startValue: sorted[0].value,
+      endTime: sorted[1].time,
+      endValue: sorted[1].value,
+    };
+  };
 
   const addTrendline = useCallback(
     async ({ startPoint, endPoint }) => {
       if (!startPoint || !endPoint) return;
 
-      const payload = buildTrendlinePayload(startPoint, endPoint);
+      const sortedPoints = sortByTime([startPoint, endPoint]);
+      const payload = buildTrendlinePayload(sortedPoints[0], sortedPoints[1]);
       const optimisticLine = {
         id: `temp-${Date.now()}-${Math.random()}`,
-        points: [startPoint, endPoint],
+        points: sortedPoints,
       };
       setLinesData((prev) => [...prev, optimisticLine]);
 
@@ -125,8 +139,8 @@ export default function StockProvider({ children }) {
     async (lineIndex, startPoint, endPoint) => {
       if (!Number.isInteger(lineIndex) || !startPoint || !endPoint) return;
 
-      const payload = buildTrendlinePayload(startPoint, endPoint);
-      const nextPoints = [startPoint, endPoint];
+      const nextPoints = sortByTime([startPoint, endPoint]);
+      const payload = buildTrendlinePayload(nextPoints[0], nextPoints[1]);
 
       setLinesData((prev) =>
         prev.map((line, index) =>

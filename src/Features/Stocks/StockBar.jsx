@@ -27,7 +27,13 @@ export default function StockBar() {
   };
 
   const handleToggleDrawTrendline = () => {
-    setDrawTrendlineMode((prev) => !prev);
+    setDrawTrendlineMode((prev) => {
+      const next = !prev;
+      if (next) {
+        setShowTrendline(true);
+      }
+      return next;
+    });
   };
 
   return (

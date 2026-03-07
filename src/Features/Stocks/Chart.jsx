@@ -12,6 +12,16 @@ import {
 const LINE_HIT_DISTANCE = 8;
 const ENDPOINT_HIT_DISTANCE = 12;
 
+const sortByTime = (points) => {
+  if (!Array.isArray(points)) return [];
+  return [...points].sort((a, b) => {
+    const at = typeof a.time === "number" ? a.time : Number(a.time);
+    const bt = typeof b.time === "number" ? b.time : Number(b.time);
+    if (Number.isNaN(at) || Number.isNaN(bt)) return 0;
+    return at - bt;
+  });
+};
+
 export default function ChartComponent() {
   const {
     stockData,
@@ -29,22 +39,24 @@ export default function ChartComponent() {
   const chartRef = useRef(null);
   const candleSeriesRef = useRef(null);
   const trendlineSeriesRef = useRef([]);
-  const firstPointRef = useRef(null);
   const previewSeriesRef = useRef(null);
+  const firstPointRef = useRef(null);
   const linesDataRef = useRef(linesData);
-
   const draggingRef = useRef({ active: false, lineIndex: null, endpointIndex: null });
+
   const [hoverState, setHoverState] = useState({ lineIndex: null, endpointIndex: null });
 
   const normalizeLinePoints = (line) =>
-    getLinePoints(line)
-      .map((point) => ({ time: point?.time, value: Number(point?.value) }))
-      .filter(
-        (point) =>
-          point.time !== undefined &&
-          point.time !== null &&
-          Number.isFinite(point.value),
-      );
+    sortByTime(
+      getLinePoints(line)
+        .map((point) => ({ time: point?.time, value: Number(point?.value) }))
+        .filter(
+          (point) =>
+            point.time !== undefined &&
+            point.time !== null &&
+            Number.isFinite(point.value),
+        ),
+    );
 
   const toScreenPoint = (point) => {
     if (!chartRef.current || !candleSeriesRef.current) return null;
@@ -75,11 +87,11 @@ export default function ChartComponent() {
   const getHitLine = (pixelPoint) => {
     if (!pixelPoint) return { lineIndex: null, endpointIndex: null };
 
-    let bestLineIndex = null;
-    let bestLineDistance = Number.POSITIVE_INFINITY;
-    let endpointLineIndex = null;
-    let endpointIndex = null;
-    let bestEndpointDistance = Number.POSITIVE_INFINITY;
+    let nearestLineIndex = null;
+    let nearestLineDistance = Number.POSITIVE_INFINITY;
+    let nearestEndpointLineIndex = null;
+    let nearestEndpointIndex = null;
+    let nearestEndpointDistance = Number.POSITIVE_INFINITY;
 
     linesDataRef.current.forEach((line, index) => {
       const points = normalizeLinePoints(line);
@@ -92,31 +104,61 @@ export default function ChartComponent() {
       const d1 = Math.hypot(pixelPoint.x - p1.x, pixelPoint.y - p1.y);
       const d2 = Math.hypot(pixelPoint.x - p2.x, pixelPoint.y - p2.y);
 
-      if (d1 < bestEndpointDistance) {
-        bestEndpointDistance = d1;
-        endpointLineIndex = index;
-        endpointIndex = 0;
+      if (d1 < nearestEndpointDistance) {
+        nearestEndpointDistance = d1;
+        nearestEndpointLineIndex = index;
+        nearestEndpointIndex = 0;
       }
-      if (d2 < bestEndpointDistance) {
-        bestEndpointDistance = d2;
-        endpointLineIndex = index;
-        endpointIndex = 1;
+
+      if (d2 < nearestEndpointDistance) {
+        nearestEndpointDistance = d2;
+        nearestEndpointLineIndex = index;
+        nearestEndpointIndex = 1;
       }
 
       const lineDistance = distanceToSegment(pixelPoint.x, pixelPoint.y, p1.x, p1.y, p2.x, p2.y);
-      if (lineDistance < bestLineDistance) {
-        bestLineDistance = lineDistance;
-        bestLineIndex = index;
+      if (lineDistance < nearestLineDistance) {
+        nearestLineDistance = lineDistance;
+        nearestLineIndex = index;
       }
     });
 
-    if (bestEndpointDistance <= ENDPOINT_HIT_DISTANCE) {
-      return { lineIndex: endpointLineIndex, endpointIndex };
+    if (nearestEndpointDistance <= ENDPOINT_HIT_DISTANCE) {
+      return { lineIndex: nearestEndpointLineIndex, endpointIndex: nearestEndpointIndex };
     }
-    if (bestLineDistance <= LINE_HIT_DISTANCE) {
-      return { lineIndex: bestLineIndex, endpointIndex: null };
+
+    if (nearestLineDistance <= LINE_HIT_DISTANCE) {
+      return { lineIndex: nearestLineIndex, endpointIndex: null };
     }
+
     return { lineIndex: null, endpointIndex: null };
+  };
+
+  const updateHoverState = (next) => {
+    setHoverState((prev) => {
+      if (
+        prev.lineIndex === next.lineIndex &&
+        prev.endpointIndex === next.endpointIndex
+      ) {
+        return prev;
+      }
+      return next;
+    });
+  };
+
+  const clearPreview = () => {
+    if (!chartRef.current || !previewSeriesRef.current) return;
+    chartRef.current.removeSeries(previewSeriesRef.current);
+    previewSeriesRef.current = null;
+  };
+
+  const ensurePreviewSeries = () => {
+    if (!chartRef.current || previewSeriesRef.current) return;
+    previewSeriesRef.current = chartRef.current.addLineSeries({
+      ...lineoptions,
+      color: "rgba(255, 140, 0, 1)",
+      lineWidth: 2,
+    });
   };
 
   const resetViewport = (candleCount) => {
@@ -146,8 +188,8 @@ export default function ChartComponent() {
     });
 
     chart.timeScale().applyOptions(timeScaleOptions);
-
     const candleSeries = chart.addCandlestickSeries(candleoptions);
+
     chartRef.current = chart;
     candleSeriesRef.current = candleSeries;
 
@@ -183,7 +225,7 @@ export default function ChartComponent() {
     trendlineSeriesRef.current.forEach((series) => chartRef.current.removeSeries(series));
     trendlineSeriesRef.current = [];
 
-    if (!showTrendline || linesData.length === 0) return;
+    if ((!showTrendline && !drawTrendlineMode) || linesData.length === 0) return;
 
     linesData.forEach((line, index) => {
       const points = normalizeLinePoints(line);
@@ -209,25 +251,10 @@ export default function ChartComponent() {
 
       trendlineSeriesRef.current.push(series);
     });
-  }, [showTrendline, linesData, hoverState]);
+  }, [showTrendline, drawTrendlineMode, linesData, hoverState]);
 
   useEffect(() => {
     if (!chartRef.current || !candleSeriesRef.current) return;
-
-    const ensurePreviewSeries = () => {
-      if (!chartRef.current || previewSeriesRef.current) return;
-      previewSeriesRef.current = chartRef.current.addLineSeries({
-        ...lineoptions,
-        color: "rgba(255, 140, 0, 1)",
-        lineWidth: 2,
-      });
-    };
-
-    const clearPreview = () => {
-      if (!chartRef.current || !previewSeriesRef.current) return;
-      chartRef.current.removeSeries(previewSeriesRef.current);
-      previewSeriesRef.current = null;
-    };
 
     const handleCrosshairMove = (param) => {
       const pixelPoint = param?.point;
@@ -237,33 +264,39 @@ export default function ChartComponent() {
         if (!updatedPoint) return;
 
         const { lineIndex, endpointIndex } = draggingRef.current;
-        setLinesData((prev) => {
-          if (!Number.isInteger(lineIndex) || !Number.isInteger(endpointIndex)) return prev;
-          return prev.map((line, index) => {
+
+        setLinesData((prev) =>
+          prev.map((line, index) => {
             if (index !== lineIndex) return line;
+
             const points = normalizeLinePoints(line);
             if (points.length < 2) return line;
+
             const next = [...points];
             next[endpointIndex] = updatedPoint;
-            return Array.isArray(line) ? next : { ...line, points: next };
-          });
-        });
+            const sorted = sortByTime(next);
+            return Array.isArray(line) ? sorted : { ...line, points: sorted };
+          }),
+        );
 
-        setHoverState({ lineIndex, endpointIndex });
+        updateHoverState({ lineIndex, endpointIndex: null });
         return;
       }
 
-      setHoverState(getHitLine(pixelPoint));
+      updateHoverState(getHitLine(pixelPoint));
 
       if (!drawTrendlineMode || !firstPointRef.current) return;
+
       const secondPoint = getChartPointFromPixel(pixelPoint);
       if (!secondPoint) return;
+
       ensurePreviewSeries();
-      previewSeriesRef.current.setData([firstPointRef.current, secondPoint]);
+      previewSeriesRef.current.setData(sortByTime([firstPointRef.current, secondPoint]));
     };
 
     const handleChartClick = async (param) => {
       if (!drawTrendlineMode) return;
+
       const clickedPoint = getChartPointFromPixel(param?.point);
       if (!clickedPoint) return;
 
@@ -274,13 +307,12 @@ export default function ChartComponent() {
         return;
       }
 
-      const startPoint = firstPointRef.current;
-      const endPoint = clickedPoint;
+      const linePoints = sortByTime([firstPointRef.current, clickedPoint]);
       firstPointRef.current = null;
       clearPreview();
 
       try {
-        await addTrendline({ startPoint, endPoint });
+        await addTrendline({ startPoint: linePoints[0], endPoint: linePoints[1] });
         setShowTrendline(true);
         setDrawTrendlineMode(false);
       } catch (error) {
@@ -343,7 +375,7 @@ export default function ChartComponent() {
       event.preventDefault();
       try {
         await deleteTrendlineByIndex(hit.lineIndex);
-        setHoverState({ lineIndex: null, endpointIndex: null });
+        updateHoverState({ lineIndex: null, endpointIndex: null });
       } catch (error) {
         console.error("Failed to delete trendline:", error);
       }

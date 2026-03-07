@@ -83,8 +83,7 @@ export default function StockList() {
           const isPaletteOpen = openPaletteToken === key;
 
           return (
-            <button
-              type="button"
+            <div
               key={key}
               id={key}
               className={
@@ -93,6 +92,14 @@ export default function StockList() {
                   : "stocklist-item"
               }
               onClick={() => handleStockClick(key)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  handleStockClick(key);
+                }
+              }}
             >
               <div
                 className={
@@ -130,7 +137,7 @@ export default function StockList() {
               </div>
 
               <span>{stocksDict[key]}</span>
-            </button>
+            </div>
           );
         })}
       </div>
