@@ -46,7 +46,14 @@ const getLinePoints = (line) => {
 };
 
 const getLineId = (line) =>
-  line?.id || line?.trendlineId || line?.lineId || line?._id || null;
+  line?.id ||
+  line?.trendlineId ||
+  line?.trendLineId ||
+  line?.lineId ||
+  line?.userTrendlineId ||
+  line?._id ||
+  line?.uuid ||
+  null;
 
 const mergeLineWithPoints = (line, points) => {
   if (Array.isArray(line)) return points;
@@ -243,6 +250,8 @@ export default function StockProvider({ children }) {
 
       const existingLine = linesData[lineIndex];
       const existingLineId = getLineId(existingLine);
+
+      if (!existingLineId) return;
 
       setLinesData((prev) => prev.filter((_, index) => index !== lineIndex));
 

@@ -43,8 +43,10 @@ export default function ChartComponent() {
   const firstPointRef = useRef(null);
   const linesDataRef = useRef(linesData);
   const draggingRef = useRef({ active: false, lineIndex: null, endpointIndex: null });
+  const candleRangeRef = useRef({ minTime: null, maxTime: null, minPrice: null, maxPrice: null });
 
   const [hoverState, setHoverState] = useState({ lineIndex: null, endpointIndex: null });
+  const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, lineIndex: null });
 
   const normalizeLinePoints = (line) =>
     sortByTime(
@@ -72,6 +74,23 @@ export default function ChartComponent() {
     const value = candleSeriesRef.current.coordinateToPrice(pixelPoint.y);
     if (time === null || time === undefined || !Number.isFinite(value)) return null;
     return { time, value };
+  };
+
+  const clampPointToCandleRange = (point) => {
+    if (!point) return null;
+
+    const { minTime, maxTime, minPrice, maxPrice } = candleRangeRef.current;
+    const next = { ...point };
+
+    if (Number.isFinite(minTime) && Number.isFinite(maxTime)) {
+      next.time = Math.max(minTime, Math.min(maxTime, Number(point.time)));
+    }
+
+    if (Number.isFinite(minPrice) && Number.isFinite(maxPrice)) {
+      next.value = Math.max(minPrice, Math.min(maxPrice, Number(point.value)));
+    }
+
+    return next;
   };
 
   const distanceToSegment = (px, py, x1, y1, x2, y2) => {
@@ -215,6 +234,31 @@ export default function ChartComponent() {
   useEffect(() => {
     if (candleSeriesRef.current && stockData.candleData.length > 0) {
       candleSeriesRef.current.setData(stockData.candleData);
+
+      const times = stockData.candleData
+        .map((candle) => Number(candle.time))
+        .filter((time) => Number.isFinite(time));
+      const lows = stockData.candleData
+        .map((candle) => Number(candle.low))
+        .filter((value) => Number.isFinite(value));
+      const highs = stockData.candleData
+        .map((candle) => Number(candle.high))
+        .filter((value) => Number.isFinite(value));
+
+      const minPrice = lows.length > 0 ? Math.min(...lows) : null;
+      const maxPrice = highs.length > 0 ? Math.max(...highs) : null;
+      const padding =
+        Number.isFinite(minPrice) && Number.isFinite(maxPrice)
+          ? (maxPrice - minPrice || maxPrice || 1) * 0.25
+          : 0;
+
+      candleRangeRef.current = {
+        minTime: times.length > 0 ? Math.min(...times) : null,
+        maxTime: times.length > 0 ? Math.max(...times) : null,
+        minPrice: Number.isFinite(minPrice) ? minPrice - padding : null,
+        maxPrice: Number.isFinite(maxPrice) ? maxPrice + padding : null,
+      };
+
       resetViewport(stockData.candleData.length);
     }
   }, [stockData.candleData]);
@@ -273,7 +317,20 @@ export default function ChartComponent() {
             if (points.length < 2) return line;
 
             const next = [...points];
-            next[endpointIndex] = updatedPoint;
+            const clampedPoint = clampPointToCandleRange(updatedPoint);
+
+            if (!clampedPoint) return line;
+
+            const otherPoint = next[endpointIndex === 0 ? 1 : 0];
+            const adjustedPoint = { ...clampedPoint };
+
+            if (endpointIndex === 0) {
+              adjustedPoint.time = Math.min(adjustedPoint.time, Number(otherPoint.time) - 1);
+            } else {
+              adjustedPoint.time = Math.max(adjustedPoint.time, Number(otherPoint.time) + 1);
+            }
+
+            next[endpointIndex] = adjustedPoint;
             const sorted = sortByTime(next);
             return Array.isArray(line) ? sorted : { ...line, points: sorted };
           }),
@@ -300,14 +357,17 @@ export default function ChartComponent() {
       const clickedPoint = getChartPointFromPixel(param?.point);
       if (!clickedPoint) return;
 
+      const clampedClickedPoint = clampPointToCandleRange(clickedPoint);
+      if (!clampedClickedPoint) return;
+
       if (!firstPointRef.current) {
-        firstPointRef.current = clickedPoint;
+        firstPointRef.current = clampedClickedPoint;
         ensurePreviewSeries();
-        previewSeriesRef.current.setData([clickedPoint, clickedPoint]);
+        previewSeriesRef.current.setData([clampedClickedPoint, clampedClickedPoint]);
         return;
       }
 
-      const linePoints = sortByTime([firstPointRef.current, clickedPoint]);
+      const linePoints = sortByTime([firstPointRef.current, clampedClickedPoint]);
       firstPointRef.current = null;
       clearPreview();
 
@@ -370,27 +430,63 @@ export default function ChartComponent() {
       const rect = chartContainerRef.current.getBoundingClientRect();
       const localPoint = { x: event.clientX - rect.left, y: event.clientY - rect.top };
       const hit = getHitLine(localPoint);
-      if (!Number.isInteger(hit.lineIndex)) return;
+      if (!Number.isInteger(hit.lineIndex)) {
+        setContextMenu({ visible: false, x: 0, y: 0, lineIndex: null });
+        return;
+      }
 
       event.preventDefault();
-      try {
-        await deleteTrendlineByIndex(hit.lineIndex);
-        updateHoverState({ lineIndex: null, endpointIndex: null });
-      } catch (error) {
-        console.error("Failed to delete trendline:", error);
-      }
+      setContextMenu({
+        visible: true,
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
+        lineIndex: hit.lineIndex,
+      });
+    };
+
+    const handlePointerDownOutsideContextMenu = () => {
+      setContextMenu({ visible: false, x: 0, y: 0, lineIndex: null });
     };
 
     chartContainerRef.current.addEventListener("pointerdown", handlePointerDown);
     window.addEventListener("pointerup", handlePointerUp);
     chartContainerRef.current.addEventListener("contextmenu", handleContextMenu);
+    window.addEventListener("pointerdown", handlePointerDownOutsideContextMenu);
 
     return () => {
       chartContainerRef.current?.removeEventListener("pointerdown", handlePointerDown);
       window.removeEventListener("pointerup", handlePointerUp);
       chartContainerRef.current?.removeEventListener("contextmenu", handleContextMenu);
+      window.removeEventListener("pointerdown", handlePointerDownOutsideContextMenu);
     };
   }, [deleteTrendlineByIndex, editTrendlineByIndex]);
 
-  return <div id="chart-container" ref={chartContainerRef} className="chart-container" />;
+  const handleDeleteFromContextMenu = async () => {
+    if (!Number.isInteger(contextMenu.lineIndex)) return;
+
+    try {
+      await deleteTrendlineByIndex(contextMenu.lineIndex);
+      updateHoverState({ lineIndex: null, endpointIndex: null });
+    } catch (error) {
+      console.error("Failed to delete trendline:", error);
+    } finally {
+      setContextMenu({ visible: false, x: 0, y: 0, lineIndex: null });
+    }
+  };
+
+  return (
+    <div id="chart-container" ref={chartContainerRef} className="chart-container">
+      {contextMenu.visible ? (
+        <div
+          className="trendline-context-menu"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          <button type="button" onClick={handleDeleteFromContextMenu}>
+            Delete trendline
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
 }
