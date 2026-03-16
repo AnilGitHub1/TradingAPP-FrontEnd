@@ -16,22 +16,9 @@ export function setAccessToken(token) {
     localStorage.setItem(ACCESS_KEY, token);
   } catch (e) {}
 }
-export function getRefreshToken() {
-  try {
-    return localStorage.getItem(REFRESH_KEY);
-  } catch (e) {
-    return null;
-  }
-}
-export function setRefreshToken(token) {
-  try {
-    localStorage.setItem(REFRESH_KEY, token);
-  } catch (e) {}
-}
 export function clearTokens() {
   try {
     localStorage.removeItem(ACCESS_KEY);
-    localStorage.removeItem(REFRESH_KEY);
   } catch (e) {}
 }
 export async function register(credentials) {
@@ -39,7 +26,6 @@ export async function register(credentials) {
     const { data } = await api.post("/api/Auth/signup", credentials);
 
     if (data.access_token) setAccessToken(data.access_token);
-    if (data.refresh_token) setRefreshToken(data.refresh_token);
 
     return data;
   } catch (err) {
@@ -70,16 +56,13 @@ export async function logout() {
   } finally {
     clearTokens();
     // optional: reload or update app context
-    window.location.href = "/login";
+    window.location.href = "/";
   }
 }
 
 export async function refresh() {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) throw new Error("No refresh token");
-  const res = await api.post("/api/Auth/refresh", { refreshToken });
-  const { accessToken, refreshToken: newRefresh } = res.data;
+  const res = await api.post("/api/Auth/refresh");
+  const { accessToken } = res.data;
   setAccessToken(accessToken);
-  if (newRefresh) setRefreshToken(newRefresh);
-  return { accessToken, refreshToken: newRefresh || refreshToken };
+  return { accessToken };
 }

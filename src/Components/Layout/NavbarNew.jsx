@@ -6,11 +6,9 @@ import { useAuth } from "../../Contexts/AuthContext";
 
 const NavbarNew = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, setIsAuthenticated } = useAuth();
+  const { isAuthenticated, setIsAuthenticated, logout } = useAuth();
   const handleOnClickLogOut = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem("token");
-    navigate("/");
+    logout();
   };
   return (
     <div className="navbar-container">

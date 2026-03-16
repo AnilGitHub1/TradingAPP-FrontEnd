@@ -147,6 +147,10 @@ export default function StockProvider({ children }) {
       startValue: sorted[0].value,
       endTime: sorted[1].time,
       endValue: sorted[1].value,
+      slope: 0,
+      intercepet: 0,
+      index1: 0,
+      index2: 0,
     };
   };
 
@@ -172,7 +176,9 @@ export default function StockProvider({ children }) {
         const normalizedSaved = normalizeLinesPayload(savedLine);
 
         setLinesData((prev) => {
-          const withoutOptimistic = prev.filter((line) => line !== optimisticLine);
+          const withoutOptimistic = prev.filter(
+            (line) => line !== optimisticLine,
+          );
           let next = withoutOptimistic;
 
           if (normalizedSaved.length > 0) {
@@ -256,7 +262,19 @@ export default function StockProvider({ children }) {
   const setBookmarkColor = useCallback(async (token, bookmarkType) => {
     if (!token || !bookmarkType) return;
 
-    setBookmarksByToken((prev) => ({ ...prev, [token]: bookmarkType }));
+    setBookmarksByToken((prev) => {
+      const updated = { ...prev };
+
+      // if same bookmark exists -> remove it
+      if (updated[token] === bookmarkType) {
+        delete updated[token];
+      } else {
+        // otherwise set/update it
+        updated[token] = bookmarkType;
+      }
+
+      return updated;
+    });
 
     try {
       await saveBookmark({ token, bookmarkType });

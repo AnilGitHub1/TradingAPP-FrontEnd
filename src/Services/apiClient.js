@@ -9,6 +9,7 @@ const api = axios.create({
   baseURL: BASE,
   timeout: 20000,
   headers: { "Content-Type": "application/json" },
+  withCredentials: true,
 });
 
 // Attach token to outgoing requests

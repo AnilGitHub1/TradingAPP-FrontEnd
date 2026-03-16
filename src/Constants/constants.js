@@ -1,3 +1,9 @@
+export const URLS = {
+  BASE: import.meta.env.VITE_API_BASE_URL || "http://localhost:5264",
+  USER_TRENDLINES: import.meta.env.VITE_API_BASE_URL || "/api/user-trendlines",
+  USER_BOOKMARKS: import.meta.env.VITE_API_BASE_URL || "/api/user-bookmarks",
+};
+
 export const TIME_FRAMES = {
   FIFTEEN_MINUTE: "15m",
   THIRTY_MINUTE: "30m",
@@ -30,14 +36,14 @@ export const STOCK_LIST_CATEGORY_OPTIONS = {
   yellowList: "Yellow List",
 };
 
-export const BOOKMARK_COLORS = ["red", "blue", "black", "green", "yellow"];
+export const BOOKMARK_COLORS = ["Red", "Blue", "Black", "Green", "Yellow"];
 
 export const BOOKMARK_FILTER_TO_COLOR = {
-  redList: "red",
-  blueList: "blue",
-  blackList: "black",
-  greenList: "green",
-  yellowList: "yellow",
+  redList: "Red",
+  blueList: "Blue",
+  blackList: "Black",
+  greenList: "Green",
+  yellowList: "Yellow",
 };
 
 export const STOCK_SORT_OPTIONS = {

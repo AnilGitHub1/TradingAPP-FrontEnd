@@ -1,6 +1,6 @@
 // stockService.js
 import api from "./apiClient";
-import { TIME_FRAMES, INTRADAY_TIMEFRAMES } from "../Constants/constants";
+import { TIME_FRAMES, INTRADAY_TIMEFRAMES, URLS } from "../Constants/constants";
 
 /**
  * getCandles(token, timeframeKey, limit)
@@ -61,7 +61,7 @@ export const getLinesData = async (stockToken, timeFrame) => {
 };
 
 export const saveLineData = async (payload) => {
-  const { data } = await api.post("api/Trendline", payload);
+  const { data } = await api.post(URLS[USER_TRENDLINES], payload);
   return data;
 };
 
@@ -76,6 +76,9 @@ export const deleteLineData = async (lineId) => {
 };
 
 export const saveBookmark = async ({ token, bookmarkType }) => {
-  const { data } = await api.post("api/Bookmarks", { token, bookmarkType });
+  const { data } = await api.post(`api/user-bookmarks`, {
+    token,
+    color: bookmarkType,
+  });
   return data;
 };
