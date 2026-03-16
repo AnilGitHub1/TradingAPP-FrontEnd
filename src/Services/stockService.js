@@ -79,6 +79,6 @@ export const saveBookmark = async ({ token, bookmarkType }) => {
 };
 
 export const getUserBookmarks = async () => {
-  const { data } = await api.get(URLS.USERS_BOOKMARKS);
+  const { data } = await api.get(URLS.USER_BOOKMARKS);
   return data;
 };
