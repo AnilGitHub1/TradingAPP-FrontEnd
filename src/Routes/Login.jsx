@@ -8,6 +8,7 @@ export default function Login(props) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
   const handleOnCLickLogInButton = async () => {
     try {
@@ -68,12 +69,22 @@ export default function Login(props) {
                   onChange={(e) => setEmail(e.target.value)}
                 ></input>
                 <div className="loginFormText">Password</div>
-                <input
-                  className="loginFormInput"
-                  placeholder="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                ></input>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <input
+                    className="loginFormInput"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  ></input>
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
                 <div style={{ marginTop: "20px" }}>
                   <div onClick={handleOnCLickLogInButton}>
                     <ButtonDark text="log in" />
