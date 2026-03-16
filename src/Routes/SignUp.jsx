@@ -9,6 +9,7 @@ const SignUp = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const { register } = useAuth();
 
   const handleOnCLickSignUpButton = async () => {
@@ -38,8 +39,9 @@ const SignUp = () => {
           "Password must be at least 8 characters long and include uppercase, lowercase, number and special character.",
         );
       }
-      if (!confirmPassword) return alert("Please confirm password!");
-      if (confirmPassword !== password) return alert("Passwords do not match!");
+      if (confirmPassword && confirmPassword !== password) {
+        return alert("Passwords do not match!");
+      }
 
       await register({
         name,
@@ -83,15 +85,26 @@ const SignUp = () => {
                   onChange={(e) => setEmail(e.target.value)}
                 ></input>
                 <div className="loginFormText">Password</div>
-                <input
-                  className="loginFormInput"
-                  placeholder="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                ></input>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <input
+                    className="loginFormInput"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  ></input>
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
                 <div className="loginFormText">Confirm Password</div>
                 <input
                   className="loginFormInput"
+                  type={showPassword ? "text" : "password"}
                   placeholder="confirm password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}

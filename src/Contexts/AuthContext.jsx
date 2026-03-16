@@ -9,13 +9,15 @@ import {
 export const AuthContext = createContext();
 
 export default function AuthProvider({ children }) {
-  const token = localStorage.getItem("accessToken");
+  const token = getAccessToken();
   const [isAuthenticated, setIsAuthenticated] = useState(!!token);
+  const [authChecked, setAuthChecked] = useState(false);
 
   // Check token on app load
   useEffect(() => {
     const token = getAccessToken();
     if (token) setIsAuthenticated(true);
+    setAuthChecked(true);
   }, []);
 
   const register = async (credentials) => {
@@ -39,6 +41,7 @@ export default function AuthProvider({ children }) {
     <AuthContext.Provider
       value={{
         isAuthenticated,
+        authChecked,
         setIsAuthenticated,
         login,
         logout,

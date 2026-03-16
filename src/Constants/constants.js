@@ -1,7 +1,8 @@
 export const URLS = {
   BASE: import.meta.env.VITE_API_BASE_URL || "http://localhost:5264",
-  USER_TRENDLINES: import.meta.env.VITE_API_BASE_URL || "/api/user-trendlines",
-  USER_BOOKMARKS: import.meta.env.VITE_API_BASE_URL || "/api/user-bookmarks",
+  USER_TRENDLINES: "/api/user-trendlines",
+  USER_BOOKMARKS: "/api/user-bookmarks",
+  USERS_BOOKMARKS: "/api/users-bookmarks",
 };
 
 export const TIME_FRAMES = {
