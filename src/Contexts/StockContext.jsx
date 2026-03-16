@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useCallback } from "react";
 import {
   getStockData,
   getUserLinesData,
+  getSystemLinesData,
   saveLineData,
   updateLineData,
   deleteLineData,
@@ -75,6 +76,22 @@ export default function StockProvider({ children }) {
     return [];
   };
 
+  const mergeUniqueLines = (...lineSets) => {
+    const merged = [];
+    const seenIds = new Set();
+
+    lineSets.flat().forEach((line) => {
+      const lineId = getLineId(line);
+      if (lineId) {
+        if (seenIds.has(lineId)) return;
+        seenIds.add(lineId);
+      }
+      merged.push(line);
+    });
+
+    return merged;
+  };
+
   const normalizeBookmarksPayload = (payload) => {
     const list = Array.isArray(payload)
       ? payload
@@ -99,13 +116,17 @@ export default function StockProvider({ children }) {
       setLoading(true);
       setError(null);
 
-      const [stockResponse, trendlineResponse] = await Promise.all([
+      const [stockResponse, userTrendlineResponse, systemTrendlineResponse] = await Promise.all([
         getStockData(stockToken, timeFrame),
         getUserLinesData(stockToken, timeFrame),
+        getSystemLinesData(stockToken, timeFrame),
       ]);
 
       setStockData({ candleData: stockResponse.stockData || [] });
-      setLinesData(normalizeLinesPayload(trendlineResponse));
+
+      const userLines = normalizeLinesPayload(userTrendlineResponse);
+      const systemLines = normalizeLinesPayload(systemTrendlineResponse);
+      setLinesData(mergeUniqueLines(systemLines, userLines));
     } catch (err) {
       console.error("Stock fetch error:", err);
       setError("Failed to fetch stock data");

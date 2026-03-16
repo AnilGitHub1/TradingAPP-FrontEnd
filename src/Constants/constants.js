@@ -3,6 +3,7 @@ export const URLS = {
   USER_TRENDLINES: "/api/user-trendlines",
   USER_BOOKMARKS: "/api/user-bookmarks",
   USERS_BOOKMARKS: "/api/users-bookmarks",
+  SYSTEM_TRENDLINES: "/api/Trendline",
 };
 
 export const TIME_FRAMES = {
