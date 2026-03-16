@@ -116,11 +116,12 @@ export default function StockProvider({ children }) {
       setLoading(true);
       setError(null);
 
-      const [stockResponse, userTrendlineResponse, systemTrendlineResponse] = await Promise.all([
-        getStockData(stockToken, timeFrame),
-        getUserLinesData(stockToken, timeFrame),
-        getSystemLinesData(stockToken, timeFrame),
-      ]);
+      const [stockResponse, userTrendlineResponse, systemTrendlineResponse] =
+        await Promise.all([
+          getStockData(stockToken, timeFrame),
+          getUserLinesData(stockToken, timeFrame),
+          getSystemLinesData(stockToken, timeFrame),
+        ]);
 
       setStockData({ candleData: stockResponse.stockData || [] });
 
@@ -156,7 +157,7 @@ export default function StockProvider({ children }) {
       slope: 0,
       intercepet: 0,
       index1: 0,
-      index2: 0,
+      index2: 1,
     };
   };
 
@@ -179,12 +180,16 @@ export default function StockProvider({ children }) {
 
         if (normalizedSaved.length > 0) {
           setLinesData((prev) => {
-            const withoutOptimistic = prev.filter((line) => line !== optimisticLine);
+            const withoutOptimistic = prev.filter(
+              (line) => line !== optimisticLine,
+            );
             return [...withoutOptimistic, ...normalizedSaved];
           });
         } else if (savedLine && typeof savedLine === "object") {
           setLinesData((prev) => {
-            const withoutOptimistic = prev.filter((line) => line !== optimisticLine);
+            const withoutOptimistic = prev.filter(
+              (line) => line !== optimisticLine,
+            );
             return [...withoutOptimistic, savedLine];
           });
         } else {
@@ -254,27 +259,30 @@ export default function StockProvider({ children }) {
     [linesData, fetchStockData],
   );
 
-  const setBookmarkColor = useCallback(async (token, bookmarkType) => {
-    if (!token || !bookmarkType) return;
+  const setBookmarkColor = useCallback(
+    async (token, bookmarkType) => {
+      if (!token || !bookmarkType) return;
 
-    setBookmarksByToken((prev) => {
-      const updated = { ...prev };
-      if (updated[token] === bookmarkType) {
-        delete updated[token];
-      } else {
-        updated[token] = bookmarkType;
+      setBookmarksByToken((prev) => {
+        const updated = { ...prev };
+        if (updated[token] === bookmarkType) {
+          delete updated[token];
+        } else {
+          updated[token] = bookmarkType;
+        }
+        return updated;
+      });
+
+      try {
+        await saveBookmark({ token, bookmarkType });
+      } catch (bookmarkError) {
+        console.error("Bookmark save error:", bookmarkError);
+        await fetchBookmarks();
+        throw bookmarkError;
       }
-      return updated;
-    });
-
-    try {
-      await saveBookmark({ token, bookmarkType });
-    } catch (bookmarkError) {
-      console.error("Bookmark save error:", bookmarkError);
-      await fetchBookmarks();
-      throw bookmarkError;
-    }
-  }, [fetchBookmarks]);
+    },
+    [fetchBookmarks],
+  );
 
   useEffect(() => {
     fetchStockData();

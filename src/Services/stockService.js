@@ -39,7 +39,6 @@ export const getStockData = async (stockToken, timeFrame) => {
   return data;
 };
 
-
 export const getSystemLinesData = async (stockToken, timeFrame) => {
   const { data } = await api.get(`${URLS.SYSTEM_TRENDLINES}/byToken`, {
     params: {
@@ -52,7 +51,7 @@ export const getSystemLinesData = async (stockToken, timeFrame) => {
 };
 
 export const getUserLinesData = async (stockToken, timeFrame) => {
-  const { data } = await api.get(`${URLS.USER_TRENDLINES}/byTokenAndTf`, {
+  const { data } = await api.get(`${URLS.USER_TRENDLINES}`, {
     params: {
       token: stockToken,
       tf: TIME_FRAMES[timeFrame],
